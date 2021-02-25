@@ -3,4 +3,3 @@ startup_script.as_given
 .terraform/providers/registry.terraform.io/hashicorp/google/3.5.0/linux_amd64/terraform-provider-google_v3.5.0_x5
 .terraform/providers/registry.terraform.io/hashicorp/random/3.1.0/linux_amd64/terraform-provider-random_v3.1.0_x5
 .terraform.lock.hcl
-outputs.tf
