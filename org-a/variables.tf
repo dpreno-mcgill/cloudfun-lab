@@ -3,7 +3,8 @@
 
 # defining the variable for the connection provider
 
-variable "credentials_file" {}
+variable "credentials_file_a" {}
+variable "credentials_file_b" {}
 
 # defining the variables for projects
 
