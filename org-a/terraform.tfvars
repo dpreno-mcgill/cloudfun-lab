@@ -1,4 +1,4 @@
-credentials_file = "architecture-sandbox-278714-647157fed5cc.json"
+credentials_file = "org-a-306519-e04977893768.json"
 region = "northamerica-northeast1"
 zone = "northamerica-northeast1-a"
 project_a = "org-a-306519"
