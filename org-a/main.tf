@@ -18,6 +18,7 @@ terraform {
 
 provider "google" {
   credentials = file(var.credentials_file)
+  project = var.project_a
   region = var.region
   zone = var.zone
 }
@@ -34,19 +35,12 @@ resource "random_string" "ipsec_psk" {
 }
 
 #
-# Create vpc networks
+# Create vpc network
 # - 2 distinct VPCs in 2 different Projects, in the same region and zone as per req 2.1
 #
 
 resource "google_compute_network" "vpc_network_a" {
-  project = var.project_a
   name = "vpc-a"
-  auto_create_subnetworks = false
-}
-
-resource "google_compute_network" "vpc_network_b" {
-  project = var.project_b
-  name = "vpc-b"
   auto_create_subnetworks = false
 }
 
@@ -56,31 +50,15 @@ resource "google_compute_network" "vpc_network_b" {
 #
 
 resource "google_compute_subnetwork" "subnetwork_aa" {
-  project = var.project_a
   name = "network-aa"
   network = google_compute_network.vpc_network_a.id
   ip_cidr_range = var.cidr_aa
 }
 
 resource "google_compute_subnetwork" "subnetwork_ab" {
-  project = var.project_a
   name = "network-ab"
   network = google_compute_network.vpc_network_a.id
   ip_cidr_range = var.cidr_ab
-}
-
-resource "google_compute_subnetwork" "subnetwork_ba" {
-  project = var.project_b
-  name = "network-ba"
-  network = google_compute_network.vpc_network_b.id
-  ip_cidr_range = var.cidr_ba
-}
-
-resource "google_compute_subnetwork" "subnetwork_bb" {
-  project = var.project_b
-  name = "network-bb"
-  network = google_compute_network.vpc_network_b.id
-  ip_cidr_range = var.cidr_bb
 }
 
 #
@@ -125,41 +103,5 @@ resource "google_compute_instance" "vm_instance_ab1" {
       }
     }
 
-  metadata_startup_script = file("startup_script.sh")
-}
-
-resource "google_compute_instance" "vm_instance_ba1" {
-  name         = "VM-BA1"
-  machine_type = var.vm_small
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-10"
-    }
-  }
-
-  network_interface {
-    network = google_compute_subnetwork.subnetwork_ba.id
-    }
-
-  metadata_startup_script = file("startup_script.sh")
-}
-
-resource "google_compute_instance" "vm_instance_bb1" {
-  name         = "VM-BB1"
-  machine_type = var.vm_small
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-10"
-    }
-  }
-
-  network_interface {
-    network = google_compute_subnetwork.subnetwork_bb.id
-      access_config {
-      }
-    }
-  
   metadata_startup_script = file("startup_script.sh")
 }
