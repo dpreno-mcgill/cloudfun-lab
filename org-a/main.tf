@@ -71,7 +71,7 @@ resource "google_compute_subnetwork" "subnetwork_ab" {
 resource "google_compute_instance" "vm_instance_aa1" {
   name         = "vm-aa1"
   machine_type = var.vm_small
-  tags         = ["aa1", "dev"]
+  tags         = ["vm-aa1", "deny-ba1-icmp", "deny-ab1-icmp"]
 
   boot_disk {
     initialize_params {
@@ -90,6 +90,7 @@ resource "google_compute_instance" "vm_instance_aa1" {
 resource "google_compute_instance" "vm_instance_ab1" {
   name         = "vm-ab1"
   machine_type = var.vm_small
+  tags         = ["vm-ab1", "allow-public-http", "allow-public-icmp", "deny-bb1-public-http", "allow-bb1-public-ssh", "deny-aa1-icmp"]
 
   boot_disk {
     initialize_params {
@@ -104,4 +105,21 @@ resource "google_compute_instance" "vm_instance_ab1" {
     }
 
   metadata_startup_script = file("startup_script.sh")
+}
+
+#
+# Firewall rules
+# as per Req 4.1, 4.2, 4.3, 4.4, 4.5
+#
+
+resource "google_compute_firewall" "firewall_vpc_a" {
+  name = "allow-public-http-access"
+  network = google_compute_network.vpc_network_a.name
+
+  allow {
+    protocol  = "tcp"
+    ports     = ["80"]
+  }
+
+  target_tags = [ "allow-public-http" ]
 }

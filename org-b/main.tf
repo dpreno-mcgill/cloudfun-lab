@@ -74,6 +74,7 @@ resource "google_compute_subnetwork" "subnetwork_bb" {
 resource "google_compute_instance" "vm_instance_ba1" {
   name         = "vm-ba1"
   machine_type = var.vm_small
+  tags         = ["vm-ba1", "allow-aa1-icmp", "allow-bb1-icmp"]
 
   boot_disk {
     initialize_params {
@@ -91,6 +92,7 @@ resource "google_compute_instance" "vm_instance_ba1" {
 resource "google_compute_instance" "vm_instance_bb1" {
   name         = "vm-bb1"
   machine_type = var.vm_small
+  tags         = ["vm-bb1", "allow-public-icmp", "deny-outbound-gdns-icmp", "allow-ba1-icmp"]
 
   boot_disk {
     initialize_params {
@@ -105,4 +107,20 @@ resource "google_compute_instance" "vm_instance_bb1" {
     }
   
   metadata_startup_script = file("startup_script.sh")
+}
+
+#
+# Firewall rules
+# as per Req 4.1, 4.2, 4.3, 4.4, 4.5
+#
+
+resource "google_compute_firewall" "firewall_vpc_b" {
+  name = "allow-public-icmp-access"
+  network = google_compute_network.vpc_network_b.name
+
+  allow {
+    protocol  = "icmp"
+  }
+
+  target_tags = [ "allow-public-icmp" ]
 }
