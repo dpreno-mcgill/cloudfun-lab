@@ -1,3 +1,4 @@
 startup_script.as_given
 *.json
 .terraform*
+*.tfstate*

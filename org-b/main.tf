@@ -72,7 +72,7 @@ resource "google_compute_subnetwork" "subnetwork_bb" {
 #
 
 resource "google_compute_instance" "vm_instance_ba1" {
-  name         = "VM-BA1"
+  name         = "vm-ba1"
   machine_type = var.vm_small
 
   boot_disk {
@@ -82,14 +82,14 @@ resource "google_compute_instance" "vm_instance_ba1" {
   }
 
   network_interface {
-    network = google_compute_subnetwork.subnetwork_ba.id
+    subnetwork = google_compute_subnetwork.subnetwork_ba.id
     }
 
   metadata_startup_script = file("startup_script.sh")
 }
 
 resource "google_compute_instance" "vm_instance_bb1" {
-  name         = "VM-BB1"
+  name         = "vm-bb1"
   machine_type = var.vm_small
 
   boot_disk {
@@ -99,7 +99,7 @@ resource "google_compute_instance" "vm_instance_bb1" {
   }
 
   network_interface {
-    network = google_compute_subnetwork.subnetwork_bb.id
+    subnetwork = google_compute_subnetwork.subnetwork_bb.id
       access_config {
       }
     }
