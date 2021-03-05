@@ -114,7 +114,7 @@ resource "google_compute_instance" "vm_instance_bb1" {
 # as per Req 4.1, 4.2, 4.3, 4.4, 4.5
 #
 
-resource "google_compute_firewall" "firewall_vpc_b" {
+resource "google_compute_firewall" "firewall_vpc_b_1" {
   name = "allow-public-icmp-access"
   network = google_compute_network.vpc_network_b.name
 
@@ -125,20 +125,23 @@ resource "google_compute_firewall" "firewall_vpc_b" {
   target_tags = [ "allow-public-icmp" ]
 }
 
-resource "google_compute_firewall" "firewall_vpc_b" {
+resource "google_compute_firewall" "firewall_vpc_b_2" {
   name = "block-outbound-gdns-icmp-access"
   network = google_compute_network.vpc_network_b.name
-  direction = "egress"
+  direction = "EGRESS"
+  priority = 1001
 
   deny {
     protocol  = "icmp"
   }
 
-  source_tags = [ "deny-outbound-gdns-icmp" ]
+  # because GCP firewall is weird, the 'target' of an egress rule is the source VM making the connection
+  # if you put 'source_tags' here you'll get an error
+  target_tags = [ "deny-outbound-gdns-icmp" ]
   destination_ranges = [ "8.8.8.8/32" ]
 }
 
-resource "google_compute_firewall" "firewall_vpc_b" {
+resource "google_compute_firewall" "firewall_vpc_b_3" {
   name = "allow-aa-icmp-access"
   network = google_compute_network.vpc_network_b.name
 
@@ -150,8 +153,8 @@ resource "google_compute_firewall" "firewall_vpc_b" {
   source_ranges = [ "10.0.10.0/24" ]
 }
 
-resource "google_compute_firewall" "firewall_vpc_b" {
-  name = "allow-aa-icmp-access"
+resource "google_compute_firewall" "firewall_vpc_b_4" {
+  name = "allow-internal-icmp-access"
   network = google_compute_network.vpc_network_b.name
 
   allow {

@@ -1,0 +1,8 @@
+credentials_file_a = "org-a-306519-e04977893768.json"
+credentials_file_b = "org-b-306519-d493ea18253f.json"
+region = "northamerica-northeast1"
+zone = "northamerica-northeast1-a"
+project_a = "org-a-306519"
+project_b = "org-b-306519"
+cidr_aa = "10.0.10.0/24"
+cidr_ba = "10.1.10.0/24"

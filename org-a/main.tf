@@ -28,11 +28,11 @@ provider "google" {
 # 
 # TO DO: should we show this in 'output' along with other info at the end?
 
-resource "random_string" "ipsec_psk" {
-  length  = 20
-  special = true
-  upper   = true
-}
+#resource "random_string" "ipsec_psk" {
+#  length  = 20
+#  special = true
+#  upper   = true
+#}
 
 #
 # Create vpc network
@@ -124,7 +124,7 @@ resource "google_compute_firewall" "firewall_vpc_a" {
   target_tags = [ "allow-public-http" ]
 }
 
-resource "google_compute_firewall" "firewall_vpc_a" {
+resource "google_compute_firewall" "firewall_vpc_a_1" {
   name = "allow-public-icmp-access"
   network = google_compute_network.vpc_network_a.name
 
@@ -135,7 +135,7 @@ resource "google_compute_firewall" "firewall_vpc_a" {
   target_tags = [ "allow-public-icmp" ]
 }
 
-resource "google_compute_firewall" "firewall_vpc_a" {
+resource "google_compute_firewall" "firewall_vpc_a_2" {
   name = "block-internal-icmp-access"
   network = google_compute_network.vpc_network_a.name
   priority = 1000
@@ -148,7 +148,7 @@ resource "google_compute_firewall" "firewall_vpc_a" {
   source_ranges = [ "10.0.10.0/24", "10.0.20.0/24" ]
 }
 
-resource "google_compute_firewall" "firewall_vpc_a" {
+resource "google_compute_firewall" "firewall_vpc_a_3" {
   name = "block-ba1-icmp-access"
   network = google_compute_network.vpc_network_a.name
   
