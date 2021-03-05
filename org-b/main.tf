@@ -74,7 +74,7 @@ resource "google_compute_subnetwork" "subnetwork_bb" {
 resource "google_compute_instance" "vm_instance_ba1" {
   name         = "vm-ba1"
   machine_type = var.vm_small
-  tags         = ["vm-ba1", "allow-aa1-icmp", "allow-bb1-icmp"]
+  tags         = ["vm-ba1", "allow-aa1-icmp", "allow-internal-icmp"]
 
   boot_disk {
     initialize_params {
@@ -92,7 +92,7 @@ resource "google_compute_instance" "vm_instance_ba1" {
 resource "google_compute_instance" "vm_instance_bb1" {
   name         = "vm-bb1"
   machine_type = var.vm_small
-  tags         = ["vm-bb1", "allow-public-icmp", "deny-outbound-gdns-icmp", "allow-ba1-icmp"]
+  tags         = ["vm-bb1", "allow-public-icmp", "deny-outbound-gdns-icmp", "allow-internal-icmp"]
 
   boot_disk {
     initialize_params {
@@ -123,4 +123,41 @@ resource "google_compute_firewall" "firewall_vpc_b" {
   }
 
   target_tags = [ "allow-public-icmp" ]
+}
+
+resource "google_compute_firewall" "firewall_vpc_b" {
+  name = "block-outbound-gdns-icmp-access"
+  network = google_compute_network.vpc_network_b.name
+  direction = "egress"
+
+  deny {
+    protocol  = "icmp"
+  }
+
+  source_tags = [ "deny-outbound-gdns-icmp" ]
+  destination_ranges = [ "8.8.8.8/32" ]
+}
+
+resource "google_compute_firewall" "firewall_vpc_b" {
+  name = "allow-aa-icmp-access"
+  network = google_compute_network.vpc_network_b.name
+
+  allow {
+    protocol  = "icmp"
+  }
+
+  target_tags = [ "allow-aa1-icmp" ]
+  source_ranges = [ "10.0.10.0/24" ]
+}
+
+resource "google_compute_firewall" "firewall_vpc_b" {
+  name = "allow-aa-icmp-access"
+  network = google_compute_network.vpc_network_b.name
+
+  allow {
+    protocol  = "icmp"
+  }
+
+  target_tags = [ "allow-internal-icmp" ]
+  source_ranges = [ "10.1.10.0/24", "10.1.20.0/24" ]
 }

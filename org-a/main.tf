@@ -71,7 +71,7 @@ resource "google_compute_subnetwork" "subnetwork_ab" {
 resource "google_compute_instance" "vm_instance_aa1" {
   name         = "vm-aa1"
   machine_type = var.vm_small
-  tags         = ["vm-aa1", "deny-ba1-icmp", "deny-ab1-icmp"]
+  tags         = ["vm-aa1", "deny-ba1-icmp", "deny-internal-icmp"]
 
   boot_disk {
     initialize_params {
@@ -90,7 +90,7 @@ resource "google_compute_instance" "vm_instance_aa1" {
 resource "google_compute_instance" "vm_instance_ab1" {
   name         = "vm-ab1"
   machine_type = var.vm_small
-  tags         = ["vm-ab1", "allow-public-http", "allow-public-icmp", "deny-bb1-public-http", "allow-bb1-public-ssh", "deny-aa1-icmp"]
+  tags         = ["vm-ab1", "allow-public-http", "allow-public-icmp", "deny-bb1-public-http", "allow-bb1-public-ssh", "deny-internal-icmp"]
 
   boot_disk {
     initialize_params {
@@ -122,4 +122,40 @@ resource "google_compute_firewall" "firewall_vpc_a" {
   }
 
   target_tags = [ "allow-public-http" ]
+}
+
+resource "google_compute_firewall" "firewall_vpc_a" {
+  name = "allow-public-icmp-access"
+  network = google_compute_network.vpc_network_a.name
+
+  allow {
+    protocol  = "icmp"
+  }
+
+  target_tags = [ "allow-public-icmp" ]
+}
+
+resource "google_compute_firewall" "firewall_vpc_a" {
+  name = "block-internal-icmp-access"
+  network = google_compute_network.vpc_network_a.name
+  priority = 1000
+
+  deny {
+    protocol  = "icmp"
+  }
+
+  target_tags = [ "deny-internal-icmp" ]
+  source_ranges = [ "10.0.10.0/24", "10.0.20.0/24" ]
+}
+
+resource "google_compute_firewall" "firewall_vpc_a" {
+  name = "block-ba1-icmp-access"
+  network = google_compute_network.vpc_network_a.name
+  
+  deny {
+    protocol  = "icmp"
+  }
+
+  target_tags = [ "block-ba1-icmp" ]
+  source_ranges = [ "10.1.10.0/24" ]
 }
