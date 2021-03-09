@@ -207,8 +207,8 @@ resource "google_compute_vpn_tunnel" "tunnel_vpcb_to_vpca" {
 resource "google_compute_route" "route_to_vpcb" {
   provider    = google.proja
   name        = "route-to-vpcb"
-#  network    = data.google_compute_network.vpc-a.name
-  network = "vpc-a"
+  network    = data.google_compute_network.vpc-a.name
+#  network = "vpc-a"
   dest_range = var.cidr_ba
   priority   = 1000
 
@@ -218,8 +218,8 @@ resource "google_compute_route" "route_to_vpcb" {
 resource "google_compute_route" "route_to_vpca" {
   provider    = google.projb
   name        = "route-to-vpca"
-#  network    = data.google_compute_network.vpc-b.name
-  network = "vpc-b"
+  network    = data.google_compute_network.vpc-b.name
+#  network = "vpc-b"
   dest_range = var.cidr_aa
   priority   = 1000
 

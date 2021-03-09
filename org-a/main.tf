@@ -159,3 +159,24 @@ resource "google_compute_firewall" "firewall_vpc_a_3" {
   target_tags = [ "block-ba1-icmp" ]
   source_ranges = [ "10.1.10.0/24" ]
 }
+
+# adding one additional firewall rule to make sure SSH works by default
+resource "google_compute_firewall" "firewall_vpc_a_4" {
+  name = "allow-ssh-default"
+  network = google_compute_network.vpc_network_a.name
+  
+  allow {
+    protocol  = "tcp"
+    ports     = ["22"]
+  }
+}
+
+# and one more to allow ICMP by default
+resource "google_compute_firewall" "firewall_vpc_a_5" {
+  name = "allow-icmp-default"
+  network = google_compute_network.vpc_network_a.name
+  
+  allow {
+    protocol  = "icmp"
+  }
+}

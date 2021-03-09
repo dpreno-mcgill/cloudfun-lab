@@ -28,11 +28,11 @@ provider "google" {
 # 
 # TO DO: should we show this in 'output' along with other info at the end?
 
-resource "random_string" "ipsec_psk" {
-  length  = 20
-  special = true
-  upper   = true
-}
+#resource "random_string" "ipsec_psk" {
+#  length  = 20
+#  special = true
+#  upper   = true
+#}
 
 #
 # Create vpc networks
@@ -163,4 +163,25 @@ resource "google_compute_firewall" "firewall_vpc_b_4" {
 
   target_tags = [ "allow-internal-icmp" ]
   source_ranges = [ "10.1.10.0/24", "10.1.20.0/24" ]
+}
+
+# adding one additional firewall rule to make sure SSH works by default
+resource "google_compute_firewall" "firewall_vpc_b_5" {
+  name = "allow-ssh-default"
+  network = google_compute_network.vpc_network_b.name
+  
+  allow {
+    protocol  = "tcp"
+    ports     = ["22"]
+  }
+}
+
+# and one more to allow ICMP by default
+resource "google_compute_firewall" "firewall_vpc_b_6" {
+  name = "allow-icmp-default"
+  network = google_compute_network.vpc_network_b.name
+  
+  allow {
+    protocol  = "icmp"
+  }
 }
