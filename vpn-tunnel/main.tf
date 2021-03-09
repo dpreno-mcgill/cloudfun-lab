@@ -5,13 +5,9 @@ terraform {
 #
 
   required_providers {
-    googleproja = {
+    google = {
       source = "hashicorp/google"
-      version = "3.5.0"
-    }
-    googleprojb = {
-      source = "hashicorp/google"
-      version = "3.5.0"
+      version = "3.58.0"
     }
   }
 }
@@ -20,7 +16,8 @@ terraform {
 # Set up the Terraform provider for GCP Project "org-a"
 #
 
-provider "googleproja" {
+provider "google" {
+  alias = "proja"
   credentials = file(var.credentials_file_a)
   project = var.project_a
   region = var.region
@@ -31,7 +28,8 @@ provider "googleproja" {
 # Set up the Terraform provider for GCP Project "org-b"
 #
 
-provider "googleprojb" {
+provider "google" {
+  alias = "projb"
   credentials = file(var.credentials_file_b)
   project = var.project_b
   region = var.region
@@ -55,26 +53,32 @@ resource "random_password" "ipsec_psk" {
 #
 
 data "google_compute_network" "vpc-a" {
-  provider = googleproja
+  provider = google.proja
   name = "vpc-a"
 }
 
 data "google_compute_network" "vpc-b" {
-  provider = googleprojb
+  provider = google.projb
   name = "vpc-b"
 }
+
+# debugging data sources
+#output "data_google_compute_network_shared_vpc" {
+#  value = data.google_compute_network.vpc-a
+#}
+
 
 #
 # Reserve a static IP address for each VPN gateway, 1 for each project/VPC
 #
 
 resource "google_compute_address" "vpc-a-gw-staticip" {
-  provider = googleproja
+  provider = google.proja
   name = "vpc-a-gw-staticip"
 }
 
 resource "google_compute_address" "vpc-b-gw-staticip" {
-  provider = googleprojb
+  provider = google.projb
   name = "vpc-b-gw-staticip"
 }
 
@@ -83,14 +87,16 @@ resource "google_compute_address" "vpc-b-gw-staticip" {
 #
 
 resource "google_compute_vpn_gateway" "vpc-a-vpn-gateway" {
-  provider = googleproja
+  provider = google.proja
   name = "vpc-a-vpn-gateway"
   network = data.google_compute_network.vpc-a.id
+#  network = "vpc-a"
 }
 
 resource "google_compute_vpn_gateway" "vpc-b-vpn-gateway" {
-  provider = googleprojb
+  provider = google.projb
   name = "vpc-b-vpn-gateway"
+#  network = "vpc-b"
   network = data.google_compute_network.vpc-b.id
 }
 
@@ -99,7 +105,7 @@ resource "google_compute_vpn_gateway" "vpc-b-vpn-gateway" {
 #
 
 resource "google_compute_forwarding_rule" "proja_fr_esp" {
-  provider    = googleproja
+  provider    = google.proja
   name        = "fr-esp"
   ip_protocol = "ESP"
   ip_address  = google_compute_address.vpc-a-gw-staticip.address
@@ -107,7 +113,7 @@ resource "google_compute_forwarding_rule" "proja_fr_esp" {
 }
 
 resource "google_compute_forwarding_rule" "proja_fr_udp500" {
-  provider    = googleproja
+  provider    = google.proja
   name        = "fr-udp500"
   ip_protocol = "UDP"
   port_range  = "500"
@@ -116,7 +122,7 @@ resource "google_compute_forwarding_rule" "proja_fr_udp500" {
 }
 
 resource "google_compute_forwarding_rule" "proja_fr_udp4500" {
-  provider    = googleproja
+  provider    = google.proja
   name        = "fr-udp4500"
   ip_protocol = "UDP"
   port_range  = "4500"
@@ -125,7 +131,7 @@ resource "google_compute_forwarding_rule" "proja_fr_udp4500" {
 }
 
 resource "google_compute_forwarding_rule" "projb_fr_esp" {
-  provider    = googleprojb
+  provider    = google.projb
   name        = "fr-esp"
   ip_protocol = "ESP"
   ip_address  = google_compute_address.vpc-b-gw-staticip.address
@@ -133,7 +139,7 @@ resource "google_compute_forwarding_rule" "projb_fr_esp" {
 }
 
 resource "google_compute_forwarding_rule" "projb_fr_udp500" {
-  provider    = googleprojb
+  provider    = google.projb
   name        = "fr-udp500"
   ip_protocol = "UDP"
   port_range  = "500"
@@ -142,7 +148,7 @@ resource "google_compute_forwarding_rule" "projb_fr_udp500" {
 }
 
 resource "google_compute_forwarding_rule" "projb_fr_udp4500" {
-  provider    = googleprojb
+  provider    = google.projb
   name        = "fr-udp4500"
   ip_protocol = "UDP"
   port_range  = "4500"
@@ -156,10 +162,12 @@ resource "google_compute_forwarding_rule" "projb_fr_udp4500" {
 #
 
 resource "google_compute_vpn_tunnel" "tunnel_vpca_to_vpcb" {
-  provider    = googleproja
-  name          = "tunnel_vpca_to_vpcb"
+  provider      = google.proja
+  name          = "tunnel-vpca-to-vpcb"
   peer_ip       = google_compute_address.vpc-b-gw-staticip.address
   shared_secret = random_password.ipsec_psk.result
+  local_traffic_selector = [ var.cidr_aa ]
+  remote_traffic_selector = [ var.cidr_ba ]
 
   target_vpn_gateway = google_compute_vpn_gateway.vpc-a-vpn-gateway.id
 
@@ -173,10 +181,12 @@ resource "google_compute_vpn_tunnel" "tunnel_vpca_to_vpcb" {
 }
 
 resource "google_compute_vpn_tunnel" "tunnel_vpcb_to_vpca" {
-  provider    = googleprojb
-  name          = "tunnel_vpcb_to_vpca"
+  provider      = google.projb
+  name          = "tunnel-vpcb-to-vpca"
   peer_ip       = google_compute_address.vpc-a-gw-staticip.address
   shared_secret = random_password.ipsec_psk.result
+  local_traffic_selector = [ var.cidr_ba ]
+  remote_traffic_selector = [ var.cidr_aa ]
 
   target_vpn_gateway = google_compute_vpn_gateway.vpc-b-vpn-gateway.id
 
@@ -195,19 +205,21 @@ resource "google_compute_vpn_tunnel" "tunnel_vpcb_to_vpca" {
 #
 
 resource "google_compute_route" "route_to_vpcb" {
-  provider    = googleproja
-  name       = "route-to-vpcb"
-  network    = data.google_compute_network.vpc-a.name
+  provider    = google.proja
+  name        = "route-to-vpcb"
+#  network    = data.google_compute_network.vpc-a.name
+  network = "vpc-a"
   dest_range = var.cidr_ba
   priority   = 1000
 
-  next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel_vpca_to_vpcb.id
+ next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel_vpca_to_vpcb.id
 }
 
 resource "google_compute_route" "route_to_vpca" {
-  provider    = googleprojb
-  name       = "route-to-vpca"
-  network    = data.google_compute_network.vpc-b.name
+  provider    = google.projb
+  name        = "route-to-vpca"
+#  network    = data.google_compute_network.vpc-b.name
+  network = "vpc-b"
   dest_range = var.cidr_aa
   priority   = 1000
 
