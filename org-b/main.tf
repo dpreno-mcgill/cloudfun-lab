@@ -86,7 +86,6 @@ resource "google_compute_instance" "vm_instance_ba1" {
     subnetwork = google_compute_subnetwork.subnetwork_ba.id
     }
 
-  metadata_startup_script = file("startup_script.sh")
 }
 
 resource "google_compute_instance" "vm_instance_bb1" {
