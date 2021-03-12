@@ -71,7 +71,7 @@ resource "google_compute_subnetwork" "subnetwork_ab" {
 resource "google_compute_instance" "vm_instance_aa1" {
   name         = "vm-aa1"
   machine_type = var.vm_small
-  tags         = ["vm-aa1", "deny-ba1-icmp", "deny-internal-icmp"]
+  tags         = ["vm-aa1", "deny-ba1-icmp", "deny-internal-icmp", "block-ba1-icmp"]
 
   boot_disk {
     initialize_params {
@@ -147,27 +147,29 @@ resource "google_compute_firewall" "firewall_vpc_a_2" {
   source_ranges = [ "10.0.10.0/24", "10.0.20.0/24" ]
 }
 
-resource "google_compute_firewall" "firewall_vpc_a_3" {
-  name = "block-ba1-icmp-access"
-  network = google_compute_network.vpc_network_a.name
-  
-  deny {
-    protocol  = "icmp"
-  }
+#resource "google_compute_firewall" "firewall_vpc_a_3" {
+#  name = "block-ba1-icmp-access"
+#  network = google_compute_network.vpc_network_a.name
+#  
+#  deny {
+#    protocol  = "icmp"
+#  }
+#
+#  target_tags = [ "block-ba1-icmp" ]
+#  source_ranges = [ "10.1.10.0/24" ]
+#}
 
-  target_tags = [ "block-ba1-icmp" ]
-  source_ranges = [ "10.1.10.0/24" ]
-}
-
-# adding one additional firewall rule to make sure SSH works by default
+# adding one additional firewall rule to make sure SSH works from GCP Console
 resource "google_compute_firewall" "firewall_vpc_a_4" {
-  name = "allow-ssh-default"
+  name = "allow-ssh-iap"
   network = google_compute_network.vpc_network_a.name
   
   allow {
     protocol  = "tcp"
     ports     = ["22"]
   }
+  
+  source_ranges = [ "35.235.240.0/20" ]
 }
 
 # and one more to allow ICMP by default
@@ -178,4 +180,33 @@ resource "google_compute_firewall" "firewall_vpc_a_5" {
   allow {
     protocol  = "icmp"
   }
+}
+
+#
+# IAM Role assignments
+# as per Req 1.2 & the documentation at https://cloud.google.com/iam/docs/understanding-roles
+#
+
+resource "google_project_iam_member" "sansa_owner" {
+  project = var.project_a
+  role    = "roles/owner"
+  member  = "user:sansareed.832206@gmail.com"
+}
+
+resource "google_project_iam_member" "theon_computeadmin" {
+  project = var.project_a
+  role    = "roles/compute.admin"
+  member  = "user:theonfrey.636475@gmail.com"
+}
+
+resource "google_project_iam_member" "jon_securityadmin" {
+  project = var.project_a
+  role    = "roles/iam.securityAdmin"
+  member  = "user:jonfrey.601857@gmail.com"
+}
+
+resource "google_project_iam_member" "petyr_netmgmt" {
+  project = var.project_a
+  role    = "roles/networkmanagement.admin"
+  member  = "user:petyrmormont.422614@gmail.com"
 }

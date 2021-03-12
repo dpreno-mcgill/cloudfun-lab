@@ -62,6 +62,17 @@ data "google_compute_network" "vpc-b" {
   name = "vpc-b"
 }
 
+#
+# Go and pull in the data for VM-BA1. We will need its internal IP later, we need to add it to a 'deny' policy in VPC A's firewall so that we can block VM-BA1 > VM-AA1
+# As per Req 4.1.4
+#
+
+data "google_compute_instance" "vm_instance_ba1" {
+  provider = google.projb
+  name = "vm-ba1"
+  
+}
+
 # debugging data sources
 #output "data_google_compute_network_shared_vpc" {
 #  value = data.google_compute_network.vpc-a
@@ -224,4 +235,21 @@ resource "google_compute_route" "route_to_vpca" {
   priority   = 1000
 
   next_hop_vpn_tunnel = google_compute_vpn_tunnel.tunnel_vpcb_to_vpca.id
+}
+
+#
+# Create a firewall rule on VPC-A to ensure that ICMP from VM-BA1's private address is not allowed to hit VM-AA1's private address
+#
+
+resource "google_compute_firewall" "firewall_vpc_a_3" {
+  provider    = google.proja
+  name = "block-ba1-icmp-access"
+  network = data.google_compute_network.vpc-a.name
+  
+  deny {
+    protocol  = "icmp"
+  }
+
+  target_tags = [ "block-ba1-icmp" ]
+  source_ranges = [ data.google_compute_instance.vm_instance_ba1.network_interface.0.network_ip ]
 }

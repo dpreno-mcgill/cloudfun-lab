@@ -4,9 +4,11 @@
 # defining the variable for the connection provider
 
 variable "credentials_file" {}
+variable "credentials_file_a" {}
 
 # defining the variables for projects
 
+variable "project_a" {}
 variable "project_b" {}
 
 # defining the variables for regions and zones
