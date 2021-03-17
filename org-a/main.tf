@@ -187,11 +187,16 @@ resource "google_compute_firewall" "firewall_vpc_a_5" {
 # as per Req 1.2 & the documentation at https://cloud.google.com/iam/docs/understanding-roles
 #
 
-resource "google_project_iam_member" "sansa_owner" {
-  project = var.project_a
-  role    = "roles/owner"
-  member  = "user:sansareed.832206@gmail.com"
-}
+# Unfortunately, as per Google documentation, it's not possible to assign an 'owner' from another organization via API, 
+# it can only be done in the Cloud Console UI (otherwise I'd have to create an Organization just for this req)
+# unfortunately this part won't be automated, and will be done ahead of time in the GCP UI console
+# see: https://cloud.google.com/iam/docs/granting-changing-revoking-access#granting-gcloud-manual 
+#
+#resource "google_project_iam_member" "sansa_owner" {
+#  project = var.project_a
+#  role    = "roles/owner"
+#  member  = "user:sansareed.832206@gmail.com"
+#}
 
 resource "google_project_iam_member" "theon_computeadmin" {
   project = var.project_a
